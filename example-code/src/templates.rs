@@ -7,6 +7,9 @@ use crate::models::{Booking, Hotel, Room, RoomWithHotel};
 #[template(path = "home.html")]
 pub struct HomeTemplate {
     pub hotels: Vec<Hotel>,
+    pub filter_all: bool,
+    pub filter_with_pool: bool,
+    pub filter_no_pool: bool,
 }
 
 #[derive(Template)]
@@ -22,6 +25,7 @@ pub struct SearchTemplate {
     pub rooms: Vec<RoomWithHotel>,
     pub city: String,
     pub guests: String,
+    pub has_pool: bool,
 }
 
 #[derive(Template)]

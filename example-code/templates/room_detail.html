@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}{{ room.name }}{% endblock %}
+{% block content %}
+<div class="container">
+    <nav class="breadcrumb">
+        <a href="/">Home</a> / <a href="/hotel/{{ room.hotel_id }}">{{ room.hotel_name }}</a> / <span>{{ room.name }}</span>
+    </nav>
+    <header class="room-header">
+        <h1>{{ room.name }}</h1>
+        <p class="room-meta">{{ room.hotel_name }} · {{ room.hotel_city }}</p>
+        <p class="room-type">{{ room.room_type }} · Up to {{ room.max_guests }} guests</p>
+        <p class="price-large">{{ room.price_display() }} <span class="per-night">per night</span></p>
+    </header>
+    <p class="room-description">{{ room.description }}</p>
+    <section class="booking-section">
+        <h2>Book this room</h2>
+        <form class="booking-form" action="/room/{{ room.id }}/book" method="post">
+            <label>
+                Your name
+                <input type="text" name="guest_name" required placeholder="Jane Doe">
+            </label>
+            <label>
+                Email
+                <input type="email" name="guest_email" required placeholder="jane@example.com">
+            </label>
+            <label>
+                Check-in
+                <input type="date" name="check_in" required id="check_in">
+            </label>
+            <label>
+                Check-out
+                <input type="date" name="check_out" required id="check_out">
+            </label>
+            <label>
+                Number of guests
+                <input type="number" name="guests" value="1" min="1" max="{{ room.max_guests }}">
+            </label>
+            <button type="submit" class="btn btn-primary btn-lg">Confirm booking</button>
+        </form>
+    </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var today = new Date().toISOString().split('T')[0];
+    document.getElementById('check_in').min = today;
+    document.getElementById('check_out').min = today;
+  });
+</script>
+{% endblock %}

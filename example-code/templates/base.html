@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Hotel Booking{% endblock %} | Sunset Hotels</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="container">
+            <a href="/" class="logo">Sunset Hotels</a>
+            <ul class="nav-links">
+                <li><a href="/">Home</a></li>
+                <li><a href="/search">Find a room</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2025 Sunset Hotels. Sample booking site.</p>
+        </div>
+    </footer>
+    <script src="/static/js/app.js"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

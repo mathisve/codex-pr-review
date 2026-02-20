@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Search rooms{% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Find a room</h1>
+    <form class="search-form" action="/search" method="get">
+        <label>
+            City
+            <input type="text" name="city" value="{{ city }}" placeholder="e.g. New York">
+        </label>
+        <label>
+            Guests
+            <input type="number" name="guests" value="{{ guests }}" min="1" placeholder="1">
+        </label>
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+    <section class="section">
+        <h2>Available rooms</h2>
+        {% if rooms.is_empty() %}
+        <p>No rooms match your criteria. Try adjusting your search.</p>
+        {% else %}
+        <div class="room-list">
+            {% for room in rooms %}
+            <article class="card room-card">
+                <div class="card-body flex-row">
+                    <div class="room-info">
+                        <h3><a href="/room/{{ room.id }}">{{ room.name }}</a></h3>
+                        <p class="room-meta">{{ room.hotel_name }} · {{ room.hotel_city }}</p>
+                        <p>{{ room.description }}</p>
+                        <p>Up to {{ room.max_guests }} guests</p>
+                    </div>
+                    <div class="room-price">
+                        <span class="price">{{ room.price_display() }}</span>
+                        <span class="per-night">/ night</span>
+                        <a href="/room/{{ room.id }}" class="btn btn-primary">Book</a>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

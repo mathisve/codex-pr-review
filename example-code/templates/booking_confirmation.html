@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Booking confirmed{% endblock %}
+{% block content %}
+<div class="container confirmation-page">
+    <div class="confirmation-card">
+        <h1>Booking confirmed</h1>
+        <p class="confirmation-id">Confirmation #{{ booking.id }}</p>
+        <p>Thank you, <strong>{{ booking.guest_name }}</strong>. We've sent a confirmation to {{ booking.guest_email }}.</p>
+        <hr>
+        <h2>{{ room.name }}</h2>
+        <p>{{ room.hotel_name }}, {{ room.hotel_city }}</p>
+        <p><strong>Check-in:</strong> {{ booking.check_in }} · <strong>Check-out:</strong> {{ booking.check_out }}</p>
+        <p><strong>Guests:</strong> {{ booking.guests }}</p>
+        <p class="total">Total: {{ booking.total_display() }}</p>
+        <a href="/" class="btn btn-primary">Back to home</a>
+    </div>
+</div>
+{% endblock %}

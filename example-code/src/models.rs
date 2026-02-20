@@ -10,6 +10,7 @@ pub struct Hotel {
     pub city: String,
     pub country: String,
     pub star_rating: i64,
+    pub has_pool: bool,
     pub image_url: Option<String>,
 }
 
@@ -37,6 +38,7 @@ pub struct RoomWithHotel {
     pub image_url: Option<String>,
     pub hotel_name: String,
     pub hotel_city: String,
+    pub hotel_has_pool: bool,
 }
 
 #[derive(Debug, Clone, sqlx::FromRow, Serialize)]

@@ -18,12 +18,18 @@ pub async fn init_db(path: impl AsRef<Path>) -> Result<SqlitePool, sqlx::Error> 
             city TEXT NOT NULL,
             country TEXT NOT NULL,
             star_rating INTEGER NOT NULL,
+            has_pool INTEGER NOT NULL DEFAULT 0,
             image_url TEXT
         )
         "#,
     )
     .execute(&pool)
     .await?;
+
+    // Migration: add has_pool to existing databases
+    let _ = sqlx::query("ALTER TABLE hotels ADD COLUMN has_pool INTEGER NOT NULL DEFAULT 0")
+        .execute(&pool)
+        .await;
 
     sqlx::query(
         r#"
@@ -72,10 +78,10 @@ pub async fn init_db(path: impl AsRef<Path>) -> Result<SqlitePool, sqlx::Error> 
 async fn seed_data(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     sqlx::query(
         r#"
-        INSERT INTO hotels (name, description, address, city, country, star_rating, image_url) VALUES
-        ('Grand Plaza Hotel', 'Luxury downtown hotel with stunning city views.', '100 Main Street', 'New York', 'USA', 5, NULL),
-        ('Seaside Resort', 'Beachfront resort with private beach and spa.', '50 Ocean Drive', 'Miami', 'USA', 5, NULL),
-        ('Mountain Lodge', 'Cozy lodge in the mountains. Perfect for skiing.', '200 Pine Road', 'Aspen', 'USA', 4, NULL)
+        INSERT INTO hotels (name, description, address, city, country, star_rating, has_pool, image_url) VALUES
+        ('Grand Plaza Hotel', 'Luxury downtown hotel with stunning city views and rooftop pool.', '100 Main Street', 'New York', 'USA', 5, 1, NULL),
+        ('Seaside Resort', 'Beachfront resort with private beach, spa and pool.', '50 Ocean Drive', 'Miami', 'USA', 5, 1, NULL),
+        ('Mountain Lodge', 'Cozy lodge in the mountains. Perfect for skiing.', '200 Pine Road', 'Aspen', 'USA', 4, 0, NULL)
         "#,
     )
     .execute(pool)
@@ -100,14 +106,17 @@ async fn seed_data(pool: &SqlitePool) -> Result<(), sqlx::Error> {
     Ok(())
 }
 
-pub async fn list_hotels(pool: &SqlitePool) -> Result<Vec<Hotel>, sqlx::Error> {
-    sqlx::query_as::<_, Hotel>("SELECT id, name, description, address, city, country, star_rating, image_url FROM hotels ORDER BY name")
-        .fetch_all(pool)
-        .await
+pub async fn list_hotels(pool: &SqlitePool, has_pool: Option<bool>) -> Result<Vec<Hotel>, sqlx::Error> {
+    let sql = match has_pool {
+        Some(true) => "SELECT id, name, description, address, city, country, star_rating, has_pool, image_url FROM hotels WHERE has_pool = 1 ORDER BY name",
+        Some(false) => "SELECT id, name, description, address, city, country, star_rating, has_pool, image_url FROM hotels WHERE has_pool = 0 ORDER BY name",
+        None => "SELECT id, name, description, address, city, country, star_rating, has_pool, image_url FROM hotels ORDER BY name",
+    };
+    sqlx::query_as::<_, Hotel>(sql).fetch_all(pool).await
 }
 
 pub async fn get_hotel(pool: &SqlitePool, id: i64) -> Result<Option<Hotel>, sqlx::Error> {
-    sqlx::query_as::<_, Hotel>("SELECT id, name, description, address, city, country, star_rating, image_url FROM hotels WHERE id = ?")
+    sqlx::query_as::<_, Hotel>("SELECT id, name, description, address, city, country, star_rating, has_pool, image_url FROM hotels WHERE id = ?")
         .bind(id)
         .fetch_optional(pool)
         .await
@@ -126,11 +135,12 @@ pub async fn search_rooms(
     pool: &SqlitePool,
     city: Option<&str>,
     guests: Option<i64>,
+    has_pool: Option<bool>,
 ) -> Result<Vec<RoomWithHotel>, sqlx::Error> {
     let rows = sqlx::query_as::<_, RoomWithHotel>(
         r#"
         SELECT r.id, r.hotel_id, r.name, r.description, r.room_type, r.price_per_night_cents, r.max_guests, r.image_url,
-               h.name AS hotel_name, h.city AS hotel_city
+               h.name AS hotel_name, h.city AS hotel_city, h.has_pool AS hotel_has_pool
         FROM rooms r
         JOIN hotels h ON r.hotel_id = h.id
         ORDER BY r.price_per_night_cents
@@ -144,7 +154,8 @@ pub async fn search_rooms(
         .filter(|r| {
             let city_ok = city.map(|c| c.is_empty() || r.hotel_city.eq_ignore_ascii_case(c)).unwrap_or(true);
             let guests_ok = guests.map(|g| g <= r.max_guests).unwrap_or(true);
-            city_ok && guests_ok
+            let pool_ok = has_pool.map(|p| r.hotel_has_pool == p).unwrap_or(true);
+            city_ok && guests_ok && pool_ok
         })
         .collect();
 
@@ -155,7 +166,7 @@ pub async fn get_room(pool: &SqlitePool, id: i64) -> Result<Option<RoomWithHotel
     sqlx::query_as::<_, RoomWithHotel>(
         r#"
         SELECT r.id, r.hotel_id, r.name, r.description, r.room_type, r.price_per_night_cents, r.max_guests, r.image_url,
-               h.name AS hotel_name, h.city AS hotel_city
+               h.name AS hotel_name, h.city AS hotel_city, h.has_pool AS hotel_has_pool
         FROM rooms r
         JOIN hotels h ON r.hotel_id = h.id
         WHERE r.id = ?

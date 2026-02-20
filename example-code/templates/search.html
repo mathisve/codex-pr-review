@@ -12,6 +12,10 @@
             Guests
             <input type="number" name="guests" value="{{ guests }}" min="1" placeholder="1">
         </label>
+        <label class="checkbox-label">
+            <input type="checkbox" name="has_pool" value="1" {% if has_pool %}checked{% endif %}>
+            Hotels with pool only
+        </label>
         <button type="submit" class="btn btn-primary">Search</button>
     </form>
     <section class="section">
@@ -25,7 +29,7 @@
                 <div class="card-body flex-row">
                     <div class="room-info">
                         <h3><a href="/room/{{ room.id }}">{{ room.name }}</a></h3>
-                        <p class="room-meta">{{ room.hotel_name }} · {{ room.hotel_city }}</p>
+                        <p class="room-meta">{{ room.hotel_name }} · {{ room.hotel_city }}{% if room.hotel_has_pool %} · <span class="badge badge-pool">Pool</span>{% endif %}</p>
                         <p>{{ room.description }}</p>
                         <p>Up to {{ room.max_guests }} guests</p>
                     </div>

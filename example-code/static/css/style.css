@@ -138,6 +138,54 @@ body {
   color: var(--color-text-muted);
 }
 
+.filter-links {
+  margin: -0.5rem 0 1.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+.filter-links a {
+  color: var(--color-accent);
+  text-decoration: none;
+  margin: 0 0.5rem;
+}
+
+.filter-links a:hover {
+  text-decoration: underline;
+}
+
+.filter-links a.active {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-pool {
+  background: rgba(245, 158, 108, 0.2);
+  color: var(--color-accent);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.checkbox-label input {
+  width: auto;
+  margin: 0;
+}
+
 .hotel-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

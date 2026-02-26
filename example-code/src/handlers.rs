@@ -13,9 +13,27 @@ use crate::templates::*;
 
 pub type AppState = Arc<SqlitePool>;
 
-pub async fn home(State(pool): State<AppState>) -> Result<HomeTemplate, axum::http::StatusCode> {
-    let hotels = db::list_hotels(&pool).await.map_err(|_| axum::http::StatusCode::INTERNAL_SERVER_ERROR)?;
-    Ok(HomeTemplate { hotels })
+#[derive(serde::Deserialize)]
+pub struct HomeQuery {
+    pub has_pool: Option<String>,
+}
+
+pub async fn home(
+    State(pool): State<AppState>,
+    Query(q): Query<HomeQuery>,
+) -> Result<HomeTemplate, axum::http::StatusCode> {
+    let has_pool = q.has_pool.as_deref().and_then(|s| match s {
+        "1" | "true" | "yes" => Some(true),
+        "0" | "false" | "no" => Some(false),
+        _ => None,
+    });
+    let hotels = db::list_hotels(&pool, has_pool).await.map_err(|_| axum::http::StatusCode::INTERNAL_SERVER_ERROR)?;
+    Ok(HomeTemplate {
+        hotels,
+        filter_all: has_pool.is_none(),
+        filter_with_pool: has_pool == Some(true),
+        filter_no_pool: has_pool == Some(false),
+    })
 }
 
 pub async fn hotel_detail(
@@ -36,6 +54,7 @@ pub async fn hotel_detail(
 pub struct SearchQuery {
     pub city: Option<String>,
     pub guests: Option<String>,
+    pub has_pool: Option<String>,
 }
 
 pub async fn search(
@@ -43,13 +62,18 @@ pub async fn search(
     Query(q): Query<SearchQuery>,
 ) -> Result<SearchTemplate, axum::http::StatusCode> {
     let guests_parsed = q.guests.as_ref().and_then(|s| s.parse::<i64>().ok());
-    let rooms = db::search_rooms(&pool, q.city.as_deref(), guests_parsed)
+    let has_pool = q.has_pool.as_deref().and_then(|s| match s {
+        "1" | "true" | "yes" => Some(true),
+        _ => None,
+    });
+    let rooms = db::search_rooms(&pool, q.city.as_deref(), guests_parsed, has_pool)
         .await
         .map_err(|_| axum::http::StatusCode::INTERNAL_SERVER_ERROR)?;
     Ok(SearchTemplate {
         rooms,
         city: q.city.unwrap_or_default(),
         guests: q.guests.unwrap_or_default(),
+        has_pool: q.has_pool.as_deref().unwrap_or("") == "1",
     })
 }
 
